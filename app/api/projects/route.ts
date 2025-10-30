@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const projects = await prisma.project.findMany({
     orderBy: { createdAt: "desc" },
@@ -12,7 +15,6 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  // validações rápidas
   if (!body.name || !body.apiKeyName) {
     return NextResponse.json(
       { ok: false, error: "name e apiKeyName são obrigatórios" },

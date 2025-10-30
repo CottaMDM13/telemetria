@@ -2,14 +2,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Params = {
-  params: { id: string };
-};
-
-export async function PATCH(req: Request, { params }: Params) {
-  const id = Number(params.id);
+export async function PATCH(
+  req: Request,
+  context: { params: { id: string } }
+) {
+  const id = Number(context.params.id);
   if (isNaN(id)) {
-    return NextResponse.json({ ok: false, error: "id inválido" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "id inválido" },
+      { status: 400 }
+    );
   }
 
   const body = await req.json();
@@ -28,10 +30,16 @@ export async function PATCH(req: Request, { params }: Params) {
   return NextResponse.json({ ok: true, data: project });
 }
 
-export async function DELETE(_req: Request, { params }: Params) {
-  const id = Number(params.id);
+export async function DELETE(
+  _req: Request,
+  context: { params: { id: string } }
+) {
+  const id = Number(context.params.id);
   if (isNaN(id)) {
-    return NextResponse.json({ ok: false, error: "id inválido" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "id inválido" },
+      { status: 400 }
+    );
   }
 
   await prisma.project.delete({

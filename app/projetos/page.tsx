@@ -1,10 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Projeto = {
+type ProjetoApi = {
   id: number;
+  name: string;
+  githubUrl: string | null;
+  hostingUrl: string | null;
+  author: string | null;
+  apiKeyName: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type ProjetoForm = {
   nome: string;
   github: string;
   hospedagem: string;
@@ -15,16 +25,36 @@ type Projeto = {
 const apiKeyOptions = ["Projeto Desenvolve", ".Edu"]; // mesmos nomes do dashboard
 
 export default function ProjetosPage() {
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [projetos, setProjetos] = useState<ProjetoApi[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState<Omit<Projeto, "id">>({
+  const [form, setForm] = useState<ProjetoForm>({
     nome: "",
     github: "",
     hospedagem: "",
     autor: "",
     apiKey: apiKeyOptions[0],
   });
+  const [loading, setLoading] = useState(false);
+
+  // 1) carrega do backend
+  async function fetchProjects() {
+    try {
+      const res = await fetch("/api/projects", { cache: "no-store" });
+      const json = await res.json();
+      if (json.ok) {
+        setProjetos(json.data as ProjetoApi[]);
+      } else {
+        console.error("Erro ao carregar projetos", json.error);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar projetos", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   function resetForm() {
     setForm({
@@ -44,46 +74,74 @@ export default function ProjetosPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.nome.trim()) return;
+    setLoading(true);
 
-    if (editId !== null) {
-      // edição
-      setProjetos((prev) =>
-        prev.map((p) => (p.id === editId ? { ...p, ...form } : p))
-      );
-    } else {
-      // criação
-      const newProject: Projeto = {
-        id: Date.now(),
-        ...form,
-      };
-      setProjetos((prev) => [newProject, ...prev]);
+    // mapeia do front -> backend
+    const payload = {
+      name: form.nome,
+      githubUrl: form.github || null,
+      hostingUrl: form.hospedagem || null,
+      author: form.autor || null,
+      apiKeyName: form.apiKey,
+    };
+
+    try {
+      if (editId !== null) {
+        // edição
+        await fetch(`/api/projects/${editId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // criação
+        await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      await fetchProjects();
+      resetForm();
+      setShowForm(false);
+    } catch (err) {
+      console.error("Erro ao salvar projeto", err);
+    } finally {
+      setLoading(false);
     }
-
-    resetForm();
-    setShowForm(false);
   }
 
-  function handleEdit(proj: Projeto) {
+  function handleEdit(proj: ProjetoApi) {
     setShowForm(true);
     setEditId(proj.id);
     setForm({
-      nome: proj.nome,
-      github: proj.github,
-      hospedagem: proj.hospedagem,
-      autor: proj.autor,
-      apiKey: proj.apiKey,
+      nome: proj.name,
+      github: proj.githubUrl ?? "",
+      hospedagem: proj.hostingUrl ?? "",
+      autor: proj.author ?? "",
+      apiKey: proj.apiKeyName,
     });
   }
 
-  function handleDelete(id: number) {
-    setProjetos((prev) => prev.filter((p) => p.id !== id));
-    // se estava editando esse, fecha
-    if (editId === id) {
-      resetForm();
-      setShowForm(false);
+  async function handleDelete(id: number) {
+    setLoading(true);
+    try {
+      await fetch(`/api/projects/${id}`, {
+        method: "DELETE",
+      });
+      await fetchProjects();
+      if (editId === id) {
+        resetForm();
+        setShowForm(false);
+      }
+    } catch (err) {
+      console.error("Erro ao deletar", err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -123,7 +181,6 @@ export default function ProjetosPage() {
       <div>
         <button
           onClick={() => {
-            // se já estiver aberto em modo edição e clicar de novo, reseta
             if (showForm && editId === null) {
               setShowForm(false);
               return;
@@ -140,7 +197,14 @@ export default function ProjetosPage() {
       {/* card de formulário (abre/fecha) */}
       {showForm && (
         <div style={formCard}>
-          <h2 style={{ margin: 0, marginBottom: 14, fontSize: 16, fontWeight: 700 }}>
+          <h2
+            style={{
+              margin: 0,
+              marginBottom: 14,
+              fontSize: 16,
+              fontWeight: 700,
+            }}
+          >
             {editId ? "Editar projeto" : "Novo projeto"}
           </h2>
           <form
@@ -221,7 +285,7 @@ export default function ProjetosPage() {
 
             {/* ações */}
             <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-              <button type="submit" style={primaryButton}>
+              <button type="submit" style={primaryButton} disabled={loading}>
                 {editId ? "Salvar alterações" : "Salvar projeto"}
               </button>
               <button
@@ -268,31 +332,42 @@ export default function ProjetosPage() {
                   }}
                 >
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                    {proj.nome}
+                    {proj.name}
                   </h3>
-                  <span style={apiKeyPill}>{proj.apiKey}</span>
+                  <span style={apiKeyPill}>{proj.apiKeyName}</span>
                 </div>
 
-                {proj.github ? (
-                  <a href={proj.github} target="_blank" rel="noreferrer" style={linkStyle}>
-                    GitHub: {proj.github}
-                  </a>
-                ) : null}
-
-                {proj.hospedagem ? (
+                {proj.githubUrl ? (
                   <a
-                    href={proj.hospedagem}
+                    href={proj.githubUrl}
                     target="_blank"
                     rel="noreferrer"
                     style={linkStyle}
                   >
-                    Hospedagem: {proj.hospedagem}
+                    GitHub: {proj.githubUrl}
                   </a>
                 ) : null}
 
-                {proj.autor ? (
-                  <p style={{ margin: "4px 0 0 0", fontSize: 12, color: "#d1d5db" }}>
-                    Quem fez: <strong>{proj.autor}</strong>
+                {proj.hostingUrl ? (
+                  <a
+                    href={proj.hostingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={linkStyle}
+                  >
+                    Hospedagem: {proj.hostingUrl}
+                  </a>
+                ) : null}
+
+                {proj.author ? (
+                  <p
+                    style={{
+                      margin: "4px 0 0 0",
+                      fontSize: 12,
+                      color: "#d1d5db",
+                    }}
+                  >
+                    Quem fez: <strong>{proj.author}</strong>
                   </p>
                 ) : null}
 
@@ -300,7 +375,11 @@ export default function ProjetosPage() {
                   <button onClick={() => handleEdit(proj)} style={smallButton}>
                     Editar
                   </button>
-                  <button onClick={() => handleDelete(proj.id)} style={dangerButton}>
+                  <button
+                    onClick={() => handleDelete(proj.id)}
+                    style={dangerButton}
+                    disabled={loading}
+                  >
                     Deletar
                   </button>
                 </div>
