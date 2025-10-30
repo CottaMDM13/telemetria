@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    // alvo do JS gerado
+    "target": "ES2020",
+    // libs que o TS conhece
+    "lib": ["dom", "dom.iterable", "esnext"],
+    // não vamos aceitar JS solto
+    "allowJs": false,
+    // não checar tipos de libs prontas
+    "skipLibCheck": true,
+    // TS mais rígido
+    "strict": true,
+    // não emitir JS (Next cuida disso)
+    "noEmit": true,
+    // compatibilidade com módulos comuns
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    // plugin do Next
+    "plugins": [{ "name": "next" }],
+
+    // 🔑 ponto importante pra você:
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+      // se você usar /src depois, basta trocar pra:
+      // "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
