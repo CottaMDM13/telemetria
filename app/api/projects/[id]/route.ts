@@ -6,13 +6,11 @@ export const dynamic = "force-dynamic";
 // export const preferredRegion = "iad1";
 
 // PATCH /api/projects/[id]
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = Number(params.id);
+export async function PATCH(req: NextRequest, ctx: any) {
+  const idParam = ctx?.params?.id;
+  const id = Number(idParam);
 
-  if (Number.isNaN(id)) {
+  if (!idParam || Number.isNaN(id)) {
     return NextResponse.json(
       { ok: false, error: "id inválido" },
       { status: 400 }
@@ -36,13 +34,11 @@ export async function PATCH(
 }
 
 // DELETE /api/projects/[id]
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = Number(params.id);
+export async function DELETE(_req: NextRequest, ctx: any) {
+  const idParam = ctx?.params?.id;
+  const id = Number(idParam);
 
-  if (Number.isNaN(id)) {
+  if (!idParam || Number.isNaN(id)) {
     return NextResponse.json(
       { ok: false, error: "id inválido" },
       { status: 400 }
