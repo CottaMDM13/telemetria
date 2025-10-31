@@ -1,178 +1,119 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
-type Props = {
-  onChange: (filters: { start?: string; end?: string; projects?: string[] }) => void;
-  projects: string[];
+type FiltersState = {
+  start?: string;
+  end?: string;
+  project?: string;
 };
 
-// mapeia nomes
-const projectMap: Record<string, string> = {
-  "Gemini API": "Projeto Desenvolve",
-  IAPD: ".Edu",
+type BillingFiltersProps = {
+  onChange: Dispatch<SetStateAction<FiltersState>>;
+  // 👇 essa era a prop que o page.tsx está mandando
+  availableProjects?: string[];
 };
 
-// nomes que não devem aparecer
-const hiddenProjects = ["null", "My First Project", "", undefined as any, null as any];
-
-export default function BillingFilters({ onChange, projects }: Props) {
+export default function BillingFilters({
+  onChange,
+  availableProjects = [],
+}: BillingFiltersProps) {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [project, setProject] = useState("");
 
-  // aplica renomeação + remove vazios
-  const cleanProjects = useMemo(() => {
-    return projects
-      .map((p) => {
-        if (!p) return ""; // protege de undefined
-        if (projectMap[p]) return projectMap[p];
-        return p;
-      })
-      .filter((p) => !hiddenProjects.includes(p));
-  }, [projects]);
-
-  function toggleProject(p: string) {
-    const next = selectedProjects.includes(p)
-      ? selectedProjects.filter((x) => x !== p)
-      : [...selectedProjects, p];
-
-    setSelectedProjects(next);
-    onChange({ start, end, projects: next });
-  }
-
-  function clearAll() {
-    setStart("");
-    setEnd("");
-    setSelectedProjects([]);
-    onChange({ start: "", end: "", projects: [] });
-  }
+  useEffect(() => {
+    onChange({
+      start: start || undefined,
+      end: end || undefined,
+      project: project || undefined,
+    });
+  }, [start, end, project, onChange]);
 
   return (
-    <div style={styles.container}>
-      <div style={styles.dateRow}>
-        <div style={styles.field}>
-          <label style={styles.label}>Início</label>
-          <input
-            type="date"
-            value={start}
-            onChange={(e) => {
-              setStart(e.target.value);
-              onChange({ start: e.target.value, end, projects: selectedProjects });
-            }}
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.field}>
-          <label style={styles.label}>Fim</label>
-          <input
-            type="date"
-            value={end}
-            onChange={(e) => {
-              setEnd(e.target.value);
-              onChange({ start, end: e.target.value, projects: selectedProjects });
-            }}
-            style={styles.input}
-          />
-        </div>
-        <button onClick={clearAll} style={styles.clearButton}>
-          Limpar
-        </button>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 12,
+        background: "#13131a",
+        border: "1px solid #222",
+        borderRadius: 12,
+        padding: 16,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <label
+          htmlFor="start"
+          style={{ color: "#b3b6be", fontSize: 14, marginBottom: 4 }}
+        >
+          Data inicial
+        </label>
+        <input
+          id="start"
+          type="date"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+          style={{
+            background: "#0b0b0f",
+            border: "1px solid #333",
+            borderRadius: 6,
+            padding: "8px 10px",
+            color: "white",
+          }}
+        />
       </div>
 
-      <div style={styles.projectsRow}>
-        {cleanProjects.map((p) => {
-          const active = selectedProjects.includes(p);
-          return (
-            <button
-              key={p}
-              onClick={() => toggleProject(p)}
-              style={active ? styles.projectButtonActive : styles.projectButton}
-            >
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <label
+          htmlFor="end"
+          style={{ color: "#b3b6be", fontSize: 14, marginBottom: 4 }}
+        >
+          Data final
+        </label>
+        <input
+          id="end"
+          type="date"
+          value={end}
+          onChange={(e) => setEnd(e.target.value)}
+          style={{
+            background: "#0b0b0f",
+            border: "1px solid #333",
+            borderRadius: 6,
+            padding: "8px 10px",
+            color: "white",
+          }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", minWidth: 200 }}>
+        <label
+          htmlFor="project"
+          style={{ color: "#b3b6be", fontSize: 14, marginBottom: 4 }}
+        >
+          Projeto
+        </label>
+        <select
+          id="project"
+          value={project}
+          onChange={(e) => setProject(e.target.value)}
+          style={{
+            background: "#0b0b0f",
+            border: "1px solid #333",
+            borderRadius: 6,
+            padding: "8px 10px",
+            color: "white",
+          }}
+        >
+          <option value="">Todos</option>
+          {availableProjects.map((p) => (
+            <option key={p} value={p}>
               {p}
-            </button>
-          );
-        })}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    backgroundColor: "#13131a",
-    border: "1px solid #222",
-    borderRadius: "16px",
-    padding: "16px",
-    marginBottom: "20px",
-    color: "#fff",
-    fontFamily: "Inter, sans-serif",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-  dateRow: {
-    display: "flex",
-    gap: "10px",
-    alignItems: "flex-end",
-    flexWrap: "wrap",
-  },
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-  },
-  label: {
-    fontSize: "12px",
-    color: "#ccc",
-  },
-  input: {
-    backgroundColor: "#1a1a22",
-    border: "1px solid #333",
-    borderRadius: "8px",
-    padding: "6px 10px",
-    color: "#fff",
-    fontSize: "13px",
-    outline: "none",
-  },
-  projectsRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "8px",
-    marginTop: "8px",
-  },
-  // estado DESMARCADO (ficava feio antes)
-  projectButton: {
-    backgroundColor: "rgba(255,255,255,0.02)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    color: "#e0e0e0",
-    borderRadius: "999px",
-    padding: "6px 14px",
-    fontSize: "12px",
-    cursor: "pointer",
-    transition: "all 0.15s ease-out",
-  },
-  // estado MARCADO
-  projectButtonActive: {
-    backgroundColor: "#ffffff",
-    color: "#000",
-    border: "1px solid #ffffff",
-    borderRadius: "999px",
-    padding: "6px 14px",
-    fontSize: "12px",
-    cursor: "pointer",
-    fontWeight: 600,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-    transition: "all 0.15s ease-out",
-  },
-  clearButton: {
-    backgroundColor: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    color: "#f5f5f5",
-    borderRadius: "10px",
-    padding: "6px 14px",
-    fontSize: "12px",
-    cursor: "pointer",
-    marginLeft: "auto",
-  },
-};
