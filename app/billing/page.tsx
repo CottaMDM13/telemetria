@@ -67,7 +67,10 @@ export default function BillingPage() {
       </p>
 
       {/* Filtros (já com layout bonitinho que fizemos) */}
-      <BillingFilters onChange={setFilters} availableProjects={availableProjects} />
+      <BillingFilters
+        onChange={setFilters}
+        availableProjects={availableProjects}
+      />
 
       {/* Gráfico de custos diários por projeto */}
       <div
