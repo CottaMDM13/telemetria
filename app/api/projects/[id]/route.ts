@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// se quiser forçar a mesma região do build:
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 // export const preferredRegion = "iad1";
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
-
 // PATCH /api/projects/[id]
-export async function PATCH(req: NextRequest, context: RouteContext) {
-  const id = Number(context.params.id);
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = Number(params.id);
 
   if (Number.isNaN(id)) {
     return NextResponse.json(
@@ -40,8 +36,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/projects/[id]
-export async function DELETE(_req: NextRequest, context: RouteContext) {
-  const id = Number(context.params.id);
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = Number(params.id);
 
   if (Number.isNaN(id)) {
     return NextResponse.json(
