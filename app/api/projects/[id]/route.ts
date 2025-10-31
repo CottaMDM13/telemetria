@@ -1,13 +1,22 @@
-// app/api/projects/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PATCH(
-  req: Request,
-  context: { params: { id: string } }
-) {
+// se quiser forçar a mesma região do build:
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+// export const preferredRegion = "iad1";
+
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
+// PATCH /api/projects/[id]
+export async function PATCH(req: NextRequest, context: RouteContext) {
   const id = Number(context.params.id);
-  if (isNaN(id)) {
+
+  if (Number.isNaN(id)) {
     return NextResponse.json(
       { ok: false, error: "id inválido" },
       { status: 400 }
@@ -20,9 +29,9 @@ export async function PATCH(
     where: { id },
     data: {
       name: body.name,
-      githubUrl: body.githubUrl,
-      hostingUrl: body.hostingUrl,
-      author: body.author,
+      githubUrl: body.githubUrl ?? null,
+      hostingUrl: body.hostingUrl ?? null,
+      author: body.author ?? null,
       apiKeyName: body.apiKeyName,
     },
   });
@@ -30,12 +39,11 @@ export async function PATCH(
   return NextResponse.json({ ok: true, data: project });
 }
 
-export async function DELETE(
-  _req: Request,
-  context: { params: { id: string } }
-) {
+// DELETE /api/projects/[id]
+export async function DELETE(_req: NextRequest, context: RouteContext) {
   const id = Number(context.params.id);
-  if (isNaN(id)) {
+
+  if (Number.isNaN(id)) {
     return NextResponse.json(
       { ok: false, error: "id inválido" },
       { status: 400 }
