@@ -5,36 +5,91 @@ import BillingFilters from "@/components/BillingFilters";
 import DailyCostsChart from "@/components/DailyCostsChart";
 import ServiceCostsChart from "@/components/ServiceCostsChart";
 
+type FiltersState = {
+  start?: string;
+  end?: string;
+  project?: string;
+};
+
 export default function BillingPage() {
-  const [filters, setFilters] = useState<{ start?: string; end?: string; projects?: string[] }>({});
+  const [filters, setFilters] = useState<FiltersState>({});
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
 
-  // fetch once to discover projects
+  // carrega nomes de projetos a partir dos dados reais do BigQuery (via nossa API)
   useEffect(() => {
-    fetch("/api/daily-costs")
-      .then((r) => r.json())
+    fetch("/api/billing/daily")
+      .then((res) => res.json())
       .then((data) => {
-        if (data.ok) {
-          const projects = Array.from(new Set(data.data.map((x: any) => x.project_name))).sort();
+        // backend devolve algo como { ok: true, data: [...] }
+        if (data && data.ok && Array.isArray(data.data)) {
+          // extrai os nomes de projeto
+          const projects = Array.from(
+            new Set(
+              (data.data as Array<{ project_name?: string }>)
+                .map((x) => (x.project_name ? String(x.project_name) : ""))
+                .filter(Boolean)
+            )
+          ).sort() as string[];
+
+          setAvailableProjects(projects);
+        } else if (Array.isArray(data)) {
+          // fallback caso o backend devolva array direto
+          const projects = Array.from(
+            new Set(
+              (data as Array<{ project_name?: string }>)
+                .map((x) => (x.project_name ? String(x.project_name) : ""))
+                .filter(Boolean)
+            )
+          ).sort() as string[];
+
           setAvailableProjects(projects);
         }
       })
-      .catch((e) => console.error(e));
+      .catch((err) => {
+        console.error("[billing/page] erro ao carregar projetos:", err);
+      });
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white p-6 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard de Custos</h1>
-          <p className="text-sm text-white/50">Filtre por projeto, período e veja totais combinados no próprio front.</p>
-        </div>
+    <main
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
+        Dashboard de Custos
+      </h1>
+      <p style={{ color: "var(--muted, #b3b6be)" }}>
+        BigQuery → API → Gráfico
+      </p>
+
+      {/* Filtros (já com layout bonitinho que fizemos) */}
+      <BillingFilters onChange={setFilters} availableProjects={availableProjects} />
+
+      {/* Gráfico de custos diários por projeto */}
+      <div
+        style={{
+          background: "#13131a",
+          border: "1px solid #222",
+          borderRadius: 16,
+          padding: 16,
+        }}
+      >
+        <DailyCostsChart filters={filters} />
       </div>
 
-      <BillingFilters onChange={setFilters} projects={availableProjects} />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <DailyCostsChart filters={filters} />
+      {/* Gráfico de custos por serviço */}
+      <div
+        style={{
+          background: "#13131a",
+          border: "1px solid #222",
+          borderRadius: 16,
+          padding: 16,
+        }}
+      >
         <ServiceCostsChart filters={filters} />
       </div>
     </main>
