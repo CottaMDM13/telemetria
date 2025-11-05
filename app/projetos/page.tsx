@@ -10,6 +10,8 @@ type ProjetoApi = {
   hostingUrl: string | null;
   author: string | null;
   apiKeyName: string;
+  description: string | null;
+  docUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -20,6 +22,8 @@ type ProjetoForm = {
   hospedagem: string;
   autor: string;
   apiKey: string;
+  descricao: string;
+  documento: string;
 };
 
 const apiKeyOptions = ["Projeto Desenvolve", ".Edu"]; // mesmos nomes do dashboard
@@ -34,6 +38,8 @@ export default function ProjetosPage() {
     hospedagem: "",
     autor: "",
     apiKey: apiKeyOptions[0],
+    descricao: "",
+    documento: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -63,12 +69,16 @@ export default function ProjetosPage() {
       hospedagem: "",
       autor: "",
       apiKey: apiKeyOptions[0],
+      descricao: "",
+      documento: "",
     });
     setEditId(null);
   }
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -86,6 +96,8 @@ export default function ProjetosPage() {
       hostingUrl: form.hospedagem || null,
       author: form.autor || null,
       apiKeyName: form.apiKey,
+      description: form.descricao || null,
+      docUrl: form.documento || null,
     };
 
     try {
@@ -124,6 +136,8 @@ export default function ProjetosPage() {
       hospedagem: proj.hostingUrl ?? "",
       autor: proj.author ?? "",
       apiKey: proj.apiKeyName,
+      descricao: proj.description ?? "",
+      documento: proj.docUrl ?? "",
     });
   }
 
@@ -266,6 +280,35 @@ export default function ProjetosPage() {
               />
             </div>
 
+            {/* descrição */}
+            <div style={{ ...fieldContainer, flex: "1 1 100%" }}>
+              <label style={labelStyle}>Descrição do projeto</label>
+              <textarea
+                name="descricao"
+                value={form.descricao}
+                onChange={handleChange}
+                placeholder="Resumo rápido do objetivo do projeto, principais features, contexto etc."
+                style={{
+                  ...inputStyle,
+                  minHeight: 70,
+                  resize: "vertical",
+                }}
+              />
+            </div>
+
+            {/* documento / documentação */}
+            <div style={{ ...fieldContainer, flex: "1 1 240px" }}>
+              <label style={labelStyle}>Documento / documentação</label>
+              <input
+                name="documento"
+                value={form.documento}
+                onChange={handleChange}
+                placeholder="Link para Notion, Google Docs, Wiki, etc."
+                style={inputStyle}
+                type="url"
+              />
+            </div>
+
             {/* api key */}
             <div style={{ ...fieldContainer, flex: "1 1 200px" }}>
               <label style={labelStyle}>API Key utilizada</label>
@@ -359,6 +402,29 @@ export default function ProjetosPage() {
                   </a>
                 ) : null}
 
+                {proj.docUrl ? (
+                  <a
+                    href={proj.docUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={linkStyle}
+                  >
+                    Documento: {proj.docUrl}
+                  </a>
+                ) : null}
+
+                {proj.description ? (
+                  <p
+                    style={{
+                      margin: "6px 0 0 0",
+                      fontSize: 12,
+                      color: "#e5e7eb",
+                    }}
+                  >
+                    {proj.description}
+                  </p>
+                ) : null}
+
                 {proj.author ? (
                   <p
                     style={{
@@ -428,7 +494,7 @@ const ghostButton: React.CSSProperties = {
 
 const formCard: React.CSSProperties = {
   background: "#13131a",
-  border: "1px solid #222",
+  border: "1px solid "#222",
   borderRadius: 16,
   padding: 18,
 };
