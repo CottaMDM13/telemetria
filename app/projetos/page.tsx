@@ -494,7 +494,7 @@ const ghostButton: React.CSSProperties = {
 
 const formCard: React.CSSProperties = {
   background: "#13131a",
-  border: "1px solid "#222",
+  border: "1px solid #222",
   borderRadius: 16,
   padding: 18,
 };
