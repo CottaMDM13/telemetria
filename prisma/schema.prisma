@@ -11,12 +11,15 @@ datasource db {
 
 // Modelo principal: Projects
 model Project {
-  id          Int      @id @default(autoincrement()) // ID auto incremental
-  name        String                                     // Nome do projeto
-  githubUrl   String?                                   // Link opcional para o repositório
-  hostingUrl  String?                                   // Link opcional da hospedagem
-  author      String?                                   // Quem criou
-  apiKeyName  String                                    // Nome da API Key associada (.Edu, Projeto Desenvolve, etc.)
-  createdAt   DateTime  @default(now())                 // Data de criação
-  updatedAt   DateTime  @updatedAt                      // Atualiza automaticamente a cada edição
+  id          Int      @id @default(autoincrement())
+  name        String
+  githubUrl   String?   @db.VarChar(255)
+  hostingUrl  String?   @db.VarChar(255)
+  author      String?   @db.VarChar(255)
+  apiKeyName  String
+  description String?   @db.Text          
+  docUrl      String?   @db.VarChar(255)  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
+
