@@ -1,3 +1,4 @@
+// app/api/projects/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -27,6 +28,8 @@ export async function PATCH(req: NextRequest, ctx: any) {
       hostingUrl: body.hostingUrl ?? null,
       author: body.author ?? null,
       apiKeyName: body.apiKeyName,
+      description: body.description ?? null,
+      docUrl: body.docUrl ?? null,
     },
   });
 
