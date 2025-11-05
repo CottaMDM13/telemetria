@@ -29,6 +29,8 @@ export async function POST(req: Request) {
       hostingUrl: body.hostingUrl ?? null,
       author: body.author ?? null,
       apiKeyName: body.apiKeyName,
+      description: body.description ?? null,
+      docUrl: body.docUrl ?? null,
     },
   });
 
